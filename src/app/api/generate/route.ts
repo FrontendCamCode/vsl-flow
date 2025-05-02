@@ -1,24 +1,23 @@
-import { NextResponse } from "next/server"
+import { auth } from "@clerk/nextjs/server"
 import { AIService } from "@/lib/ai"
 import { getScript } from "@/lib/db"
-import { auth } from "@clerk/nextjs"
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
     const { userId } = auth()
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 })
+      return new Response("Unauthorized", { status: 401 })
     }
 
-    const { scriptId, prompt, model } = await request.json()
+    const { scriptId, prompt, model } = await req.json()
     
     if (!scriptId || !prompt) {
-      return new NextResponse("Missing required fields", { status: 400 })
+      return new Response("Missing required fields", { status: 400 })
     }
 
     const script = await getScript(scriptId)
     if (!script) {
-      return new NextResponse("Script not found", { status: 404 })
+      return new Response("Script not found", { status: 404 })
     }
 
     const aiService = new AIService({
@@ -29,9 +28,11 @@ export async function POST(request: Request) {
 
     const generatedText = await aiService.generateBlock(script, prompt, model)
     
-    return NextResponse.json({ text: generatedText })
+    return new Response(JSON.stringify({ text: generatedText }), {
+      headers: { "Content-Type": "application/json" },
+    })
   } catch (error) {
     console.error("Error generating text:", error)
-    return new NextResponse("Internal Server Error", { status: 500 })
+    return new Response("Internal Server Error", { status: 500 })
   }
 } 

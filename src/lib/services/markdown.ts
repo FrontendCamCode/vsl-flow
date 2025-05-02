@@ -1,18 +1,19 @@
 import MarkdownIt from 'markdown-it';
 
 export class MarkdownService {
-  static async export(content: string, title: string) {
+  static async export(content: string, title: string): Promise<void> {
     const md = new MarkdownIt();
-    const markdownContent = `# ${title}\n\n${content}`;
+    const html = md.render(content);
     
-    const blob = new Blob([markdownContent], { type: 'text/markdown' });
+    const blob = new Blob([content], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${title}.md`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
 } 
